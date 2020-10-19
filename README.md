@@ -22,8 +22,22 @@ go run . --help
 ```
 go build .
 ```
-
 ## Results
 
-1. Cloudflare worker site 
+- Youtube and Pinterest took more time compared to others as they have to load lot of image data I guess.
+- Cloudflare worker loaded fastest when compared to others.
+
+## Screenshots
+
+1. Cloudflare worker site links
 ![workersite](systems/screenshots/ss1.png)
+2. Cloudflare worker site
+![workersite](systems/screenshots/ss2.png)
+3. Cloudflare website
+![cloudflare](systems/screenshots/ss3.png)
+4. Youtube website
+![youtube](systems/screenshots/ss4.png)
+5. Google.com
+![google](systems/screenshots/ss5.png)
+6. Pinterest 
+![pinterest](systems/screenshots/ss6.png)
