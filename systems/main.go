@@ -7,6 +7,7 @@ import (
 	"net"
 	"net/url"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -26,11 +27,7 @@ func parseURL(URL string) (string, string, bool) {
 	return "", "", true
 }
 
-func urlError() {
-	fmt.Println("Enter valid URL")
-}
-
-func sendRequest(url string, path string) {
+func getResponse(url string, path string) string {
 	timeout, _ := time.ParseDuration("10s")
 
 	dialer := net.Dialer{
@@ -50,37 +47,77 @@ func sendRequest(url string, path string) {
 
 	response, err := ioutil.ReadAll(conn)
 	responseString := string(response)
-	// Check if any errors occured
+
 	if err != nil {
 		fmt.Print(err.Error())
 		os.Exit(0)
 	}
 
-	// fmt.Println(responseString)
-
-	fmt.Println(len(responseString))
+	return responseString
 
 }
 
-func handleRequest(url string, path string, count int) {
-	timetaken := make([]int, 0, count)
-	// bytes := make([]int, 0, count)
-	// errors := make([]int, 0, count)
+func parseResponse(response string) (int, int) {
+	b := len(response)
+	r := strings.Split(response, " ")
+	status, _ := strconv.Atoi(r[1])
+	return b, status
+}
 
+func handleRequest(url string, path string, count int) ([]int, []int, []int) {
+	times := make([]int, 0, count)
+	bytes := make([]int, 0, count)
+	errors := make([]int, 0, count)
+
+	if count == 0 {
+		response := getResponse(url, path)
+		print(response)
+	}
 	for i := 0; i < count; i++ {
 		start := time.Now()
-		sendRequest(url, path)
+		response := getResponse(url, path)
 		end := time.Since(start)
 
-		timetaken = append(timetaken, int(end.Milliseconds()))
+		times = append(times, int(end.Milliseconds()))
+		b, e := parseResponse(response)
+		bytes = append(bytes, b)
+		errors = append(errors, e)
 	}
 
+	return times, bytes, errors
+
+}
+
+func parseInput(arguments []string) (string, string, int) {
+	return "", "", 0
+}
+
+func printOutput(times []int, bytes []int, errors []int) {
+	count := len(times)
+	sort.Ints(times)
+	sort.Ints(bytes)
+	tott := 0
+	totb := 0
+	for i := 0; i < count; i++ {
+		tott += times[i]
+		totb += bytes[i]
+	}
+	println("Number of requests : ", count)
+	println("Fastest time (ms) : ", times[0])
+	println("Slowest time (ms) : ", times[count-1])
+	println("Mean time (ms) : ", (tott*1.0)/count)
+	println("Median time (ms) : ", times[count/2])
+	println("Percentage of successful requests : ", ((count - len(errors)*100.0) / count))
+	println("Median time (ms) : ", times[count/2])
+	println("Error codes : ", errors)
+	println("Size of bytes of smallest response : ", bytes[0])
+	println("Size of bytes of largest response : ", bytes[count-1])
 }
 
 func main() {
 	arguments := os.Args[1:]
 	URL := ""
-	count := 1
+	count := 0
 	path := ""
 	// Check if no arguments, or help flag passed
 	if len(arguments) <= 0 || arguments[0] == "--help" {
@@ -103,7 +140,7 @@ func main() {
 			os.Exit(1)
 		}
 	}
-	if arguments[2] == "profile" {
+	if arguments[2] == "--profile" {
 		if len(arguments) > 3 {
 			c, err := strconv.Atoi(arguments[3])
 			if err != nil && c > 0 {
@@ -113,23 +150,8 @@ func main() {
 			fmt.Print(c)
 		}
 	}
-
-	// fmt.Print(URL+" "+path, count)
-
-	handleRequest(URL, path, count)
-	total := `HTTP/1.1 200 OK
-	Date: Mon, 19 Oct 2020 00:01:27 GMT
-	Content-Type: application/json
-	Content-Length: 190
-	Connection: close
-	Set-Cookie: __cfduid=dccbdf1937992b8cb6dbcd71bb8e5d33e1603065687; expires=Wed, 18-Nov-20 00:01:27 GMT; path=/; domain=.endeavor.workers.dev; HttpOnly; SameSite=Lax
-	cf-request-id: 05dfc2465600002ac0dc83a000000001
-	Expect-CT: max-age=604800, report-uri="https://report-uri.cloudflare.com/cdn-cgi/beacon/expect-ct"
-	Report-To: {"endpoints":[{"url":"https:\/\/a.nel.cloudflare.com\/report?lkg-colo=16&lkg-time=1603065688"}],"group":"cf-nel","max_age":604800}
-	NEL: {"report_to":"cf-nel","max_age":604800}
-	Server: cloudflare
-	CF-RAY: 5e463983b9e02ac0-IAD`
-	s := `[{"name":"Youtube","url":"https://www.youtube.com"},{"name":"Cloud Flare","url":"https://www.cloudflare.com"},{"name":"Among US","url":"https://store.steampowered.com/app/945360/Among_Us/"}]`
-	print("len of something ", len(s))
-	print("len of total", len(total))
+	if count != 0 {
+		t, b, e := handleRequest(URL, path, count)
+		printOutput(t, b, e)
+	}
 }
