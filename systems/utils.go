@@ -10,12 +10,21 @@ import (
 )
 
 func urlError() {
+	/*
+		Prints error message
+	*/
 	fmt.Println("Enter valid URL")
 }
 
 func parseURL(URL string) (string, string, bool) {
+	/*
+		Parses the URL and returs the hostname, pathname and isURLValid
+	*/
 	URL = strings.ToLower(URL)
-	val, err := url.Parse(URL)
+	if URL[:4] != "http" {
+		URL = "https://" + URL
+	}
+	val, err := url.Parse(URL) // Parses the URL using url function
 	if err == nil && (val.Scheme == "http" || val.Scheme == "https") && val.Host != "" {
 		return val.Hostname(), val.Path, false
 	}
@@ -23,6 +32,9 @@ func parseURL(URL string) (string, string, bool) {
 }
 
 func helpInstructions() {
+	/*
+		Prints help instructions
+	*/
 	println("-------------------Usage-------------------\n\nTo get HTTP response from a URL\nCode : go run . --url <URL>")
 	println("\nExample:\ngo run . --url https://www.google.com")
 	println("\nIf you need to profile the url\nCode : go run . --url <URL> --profile <no. of requests>")
@@ -30,9 +42,15 @@ func helpInstructions() {
 }
 
 func parseInput(args []string) (string, string, int) {
+	/*
+		Parses the input arguments from the command line and returns the URL, pathname and no. of requests count
+	*/
+
+	//Initializing values
 	URL := ""
 	count := 0
 	path := "/"
+
 	if len(args) == 0 || args[0] == "--help" {
 		helpInstructions()
 		os.Exit(1)
@@ -62,6 +80,8 @@ func parseInput(args []string) (string, string, int) {
 			c, err := strconv.Atoi(args[i+1])
 			if err != nil || c <= 0 {
 				fmt.Println("Enter valid request count")
+				println()
+				helpInstructions()
 				os.Exit(1)
 			}
 			count = c
@@ -77,6 +97,9 @@ func parseInput(args []string) (string, string, int) {
 }
 
 func printOutput(times []int, bytes []int, errors []int) {
+	/*
+		Prints the final output profile for each website
+	*/
 	count := len(times)
 	sort.Ints(times)
 	sort.Ints(bytes)
@@ -102,4 +125,6 @@ func printOutput(times []int, bytes []int, errors []int) {
 	}
 	fmt.Println("Size of bytes of smallest response : ", bytes[count-1])
 	fmt.Println("Size of bytes of largest response : ", bytes[0])
+	println()
+	println()
 }
