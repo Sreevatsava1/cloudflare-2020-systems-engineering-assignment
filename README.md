@@ -26,4 +26,4 @@ go build .
 ## Results
 
 1. Cloudflare worker site 
-![workersite](screenshots/ss1.png)
+![workersite](systems/screenshots/ss1.png)
